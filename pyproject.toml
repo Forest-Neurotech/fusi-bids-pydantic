@@ -4,8 +4,11 @@ version = "0.0.1"
 description = "Pydantic model for fUSI-BIDS extension proposal (BEP) sidecar JSON schema"
 authors = [{ name = "Charles Guan", email = "charles@forestneurotech.org" }]
 readme = "README.md"
-keywords = ['python']
+keywords = ['fUSI', 'bids', 'pydantic']
 requires-python = ">=3.9,<4.0"
+dependencies = [
+    "pydantic>=2.4.0",
+]
 classifiers = [
     "Intended Audience :: Developers",
     "Programming Language :: Python",
@@ -38,7 +41,7 @@ build-backend = "setuptools.build_meta"
 py-modules = ["fusi_bids_pydantic"]
 
 [tool.mypy]
-files = ["fusi_bids_pydantic"]
+files = ["fusi_bids_pydantic.py"]
 disallow_untyped_defs = true
 disallow_any_unimported = true
 no_implicit_optional = true
@@ -106,4 +109,4 @@ skip_empty = true
 
 [tool.coverage.run]
 branch = true
-source = ["fusi_bids_pydantic"]
+source = ["fusi_bids_pydantic.py"]
