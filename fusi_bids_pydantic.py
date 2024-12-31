@@ -1,142 +1,162 @@
 """fUSI-BIDS Pydantic models for sidecar JSON schema."""
 
 import contextlib
+import warnings
 from enum import Enum
-from typing import ClassVar, Optional, Union
+from typing import Annotated, Any, ClassVar, Optional, TypeVar, Union
 
 from pydantic import (
+    AfterValidator,
     BaseModel,
     ConfigDict,
     Field,
+    FiniteFloat,
+    NonNegativeFloat,
+    PositiveFloat,
+    PositiveInt,
     ValidationError,
+    ValidationInfo,
     field_validator,
     model_validator,
+)
+from typing_extensions import TypeAliasType
+
+
+def warn_if_none(value: Any, info: ValidationInfo) -> Any:
+    if value is None:
+        warnings.warn(f"RECOMMENDED field {info.field_name} is not set.", stacklevel=2)
+    return value
+
+
+# Alias for RECOMMENDED fields
+T = TypeVar("T")
+Recommended = TypeAliasType(
+    "Recommended",
+    Annotated[Optional[T], AfterValidator(warn_if_none)],
+    type_params=(T,),
 )
 
 
 class Hardware(BaseModel):
     """Scanner and probe hardware information."""
 
-    model_config = ConfigDict(extra="allow")
-    manufacturer: Optional[str] = Field(
+    model_config = ConfigDict(extra="allow", validate_default=True)
+    manufacturer: Recommended[str] = Field(
         None,
         description="Manufacturer of the ultrasound scanner that produced the measurements.",
         alias="Manufacturer",
     )
-    manufacturers_model_name: Optional[str] = Field(
+    manufacturers_model_name: Recommended[str] = Field(
         None,
         description="Manufacturer's model name of the ultrasound scanner that produced the measurements.",
         alias="ManufacturersModelName",
     )
-    device_serial_number: Optional[str] = Field(
+    device_serial_number: Recommended[str] = Field(
         None,
         description="The serial number of the ultrasound scanner that produced the measurements. "
         "A pseudonym can also be used to prevent the equipment from being identifiable, "
         "so long as each pseudonym is unique within the dataset.",
         alias="DeviceSerialNumber",
     )
-    station_name: Optional[str] = Field(
+    station_name: Recommended[str] = Field(
         None,
         description="Institution-defined name of the ultrasound scanner that produced the measurements.",
         alias="StationName",
     )
-    software_versions: Optional[str] = Field(
+    software_versions: Recommended[str] = Field(
         None,
         description="Manufacturer's designation of the software version of the ultrasound scanner "
         "that produced the measurements.",
         alias="SoftwareVersions",
     )
-    probe_manufacturer: Optional[str] = Field(
+    probe_manufacturer: Recommended[str] = Field(
         None,
         description="Manufacturer of the ultrasound probe that produced the measurements.",
         alias="ProbeManufacturer",
     )
-    probe_type: Optional[str] = Field(
+    probe_type: Recommended[str] = Field(
         None,
         description="Information describing the ultrasound probe type, e.g. linear, RCA, multiarray, etc.).",
         alias="ProbeType",
     )
-    probe_model: Optional[str] = Field(
+    probe_model: Recommended[str] = Field(
         None,
         description="Manufacturer's model name of the ultrasound probe used to produce the measurements.",
         alias="ProbeModel",
     )
-    probe_central_frequency_mhz: Optional[float] = Field(
+    probe_central_frequency_mhz: Recommended[NonNegativeFloat] = Field(
         None,
         description="Central frequency of the ultrasound probe, in megahertz.",
         alias="ProbeCentralFrequency",
-        ge=0,
     )
-    probe_number_of_elements: Optional[Union[int, list[int]]] = Field(
-        None,
-        description="Number of probe transducers along each probe axis (e.g. [32, 32] for a 32x32 matrix probe).",
-        alias="ProbeNumberOfElements",
-        gt=0,
-        min_length=1,
-        max_length=2,
+    probe_number_of_elements: Recommended[Union[PositiveInt, list[PositiveInt]]] = (
+        Field(
+            None,
+            description="Number of probe transducers along each probe axis (e.g. [32, 32] for a 32x32 matrix probe).",
+            alias="ProbeNumberOfElements",
+        )
     )
-    probe_pitch_mm: Optional[float] = Field(
+    probe_pitch_mm: Recommended[PositiveFloat] = Field(
         None,
         description="Inter-element pitch of the probe, in millimeters.",
         alias="ProbePitch",
-        gt=0,
     )
-    probe_radius_of_curvature_deg: Optional[float] = Field(
+    probe_radius_of_curvature_deg: Recommended[float] = Field(
         None,
         description="Radius of curvature of the probe, in degrees.",
         alias="ProbeRadiusOfCurvature",
-        ge=0,
-        le=360,
     )
-    probe_elevation_width_mm: Optional[float] = Field(
+    probe_elevation_width_mm: Recommended[PositiveFloat] = Field(
         None,
         description="Elevation width at the probe focal point, in millimeters.",
         alias="ProbeElevationWidth",
-        gt=0,
     )
-    probe_elevation_aperture_mm: Optional[float] = Field(
+    probe_elevation_aperture_mm: Recommended[PositiveFloat] = Field(
         None,
         description="Elevation aperture of the probe, in millimeters.",
         alias="ProbeElevationAperture",
-        gt=0,
     )
-    probe_elevation_focus_mm: Optional[float] = Field(
+    probe_elevation_focus_mm: Recommended[PositiveFloat] = Field(
         None,
         description="Elevation focus of the probe, in millimeters.",
         alias="ProbeElevationFocus",
-        gt=0,
     )
+
+    @field_validator("probe_radius_of_curvature_deg")
+    @classmethod
+    def validate_probe_radius_of_curvature(cls, v: float) -> float:
+        if (v is not None) and (v < 0 or v > 360):
+            raise ValueError(
+                "Probe radius of curvature must be between 0 and 360 degrees"
+            )
+        return v
 
 
 class SequenceSpecifics(BaseModel):
     """Transmit-receive sequence"""
 
-    model_config = ConfigDict(extra="allow")
-    depth_mm: Optional[list[float]] = Field(
+    model_config = ConfigDict(extra="allow", validate_default=True)
+    depth_mm: Recommended[list[FiniteFloat]] = Field(
         None,
         description="Minimal and maximal depth of the field of view from the probe surface, e.g. [4,14], in millimeters.",
         alias="Depth",
-        min_length=2,
-        max_length=2,
     )
-    ultrasound_pulse_repetition_frequency_hz: Optional[float] = Field(
+    ultrasound_pulse_repetition_frequency_hz: Recommended[PositiveFloat] = Field(
         None,
         description="Pulse repetition frequency, in hertz.",
         alias="UltrasoundPulseRepetitionFrequency",
-        gt=0,
     )
-    plane_wave_angles_deg: Optional[Union[float, list[float]]] = Field(
+    plane_wave_angles_deg: Recommended[Union[FiniteFloat, list[FiniteFloat]]] = Field(
         None,
         description="Angles at which tilted plane waves are emitted, in degrees.",
         alias="PlaneWaveAngles",
     )
-    ultrafast_sampling_frequency_hz: Optional[float] = Field(
+    ultrafast_sampling_frequency_hz: Recommended[PositiveFloat] = Field(
         None,
         description="Sampling frequency of the compounded volumes, in hertz. Note that UltrafastSamplingFrequency "
         "should be equal to UltrasoundPulseRepetitionFrequency divided by the number of tilted plane "
         "wave angles defined in PlaneWavesAngles.",
         alias="UltrafastSamplingFrequency",
-        gt=0,
     )
     compound_virtual_sources: Optional[list[list[float]]] = Field(
         None,
@@ -145,13 +165,12 @@ class SequenceSpecifics(BaseModel):
         "values in depth for diverging sources.",
         alias="CompoundVirtualSources",
     )
-    probe_voltage_v: Optional[float] = Field(
+    probe_voltage_v: Optional[PositiveFloat] = Field(
         None,
         description="Voltage applied to the probe, in volts.",
         alias="ProbeVoltage",
-        gt=0,
     )
-    sequence_name: Optional[str] = Field(
+    sequence_name: Recommended[str] = Field(
         None,
         description="Manufacturer's designation of the sequence name.",
         alias="SequenceName",
@@ -170,7 +189,11 @@ class SequenceSpecifics(BaseModel):
     @field_validator("depth_mm")
     @classmethod
     def validate_depth(cls, v: list[float]) -> list[float]:
-        if v is not None and v[1] <= v[0]:
+        if v is None:
+            return v
+        if len(v) != 2:
+            raise ValueError("Depth must be a list of two values")
+        if v[1] <= v[0]:
             err_msg = "Max depth must be greater than min depth"
             raise ValueError(err_msg)
         return v
@@ -179,7 +202,7 @@ class SequenceSpecifics(BaseModel):
 class ClutterFilter(BaseModel):
     """Clutter filter. Allows for extra parameters."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", validate_default=True)
     filter_type: str = Field(
         ..., description="Type of clutter filter applied", alias="FilterType"
     )
@@ -188,14 +211,13 @@ class ClutterFilter(BaseModel):
 class ClutterFiltering(BaseModel):
     """Clutter filtering."""
 
-    model_config = ConfigDict(extra="allow")
-    clutter_filter_window_duration_ms: Optional[float] = Field(
+    model_config = ConfigDict(extra="allow", validate_default=True)
+    clutter_filter_window_duration_ms: Recommended[PositiveFloat] = Field(
         None,
         description="Duration of the clutter filter window, in milliseconds.",
         alias="ClutterFilterWindowDuration",
-        gt=0,
     )
-    clutter_filters: Optional[list[ClutterFilter]] = Field(
+    clutter_filters: Recommended[list[ClutterFilter]] = Field(
         None,
         description="Clutter filter methods used to remove clutter artifacts.",
         alias="ClutterFilters",
@@ -205,20 +227,27 @@ class ClutterFiltering(BaseModel):
 class PowerDopplerIntegration(BaseModel):
     """Power Doppler integration window."""
 
-    model_config = ConfigDict(extra="allow")
-    power_doppler_integration_duration_ms: Optional[float] = Field(
+    model_config = ConfigDict(extra="allow", validate_default=True)
+    power_doppler_integration_duration_ms: Recommended[PositiveFloat] = Field(
         None,
         description="Duration of the power Doppler integration window, in milliseconds.",
         alias="PowerDopplerIntegrationDuration",
-        gt=0,
     )
-    power_doppler_integration_stride_ms: Optional[float] = Field(
+    power_doppler_integration_stride_ms: Recommended[PositiveFloat] = Field(
         None,
         description="Stride from one power Doppler integration window to another, in milliseconds. "
         "Assumed equal to the PowerDopplerIntegrationDuration as default.",
         alias="PowerDopplerIntegrationStride",
-        gt=0,
     )
+
+    @model_validator(mode="after")
+    def stride_defaults_to_duration(self) -> "PowerDopplerIntegration":
+        """If unset, assume PowerDopplerIntegrationStride is equal to PowerDopplerIntegrationDuration."""
+        if self.power_doppler_integration_stride_ms is None:
+            self.power_doppler_integration_stride_ms = (
+                self.power_doppler_integration_duration_ms
+            )
+        return self
 
 
 class SliceEncodingDirection(str, Enum):
@@ -235,7 +264,7 @@ class SliceEncodingDirection(str, Enum):
 class TimingParametersBase(BaseModel):
     """Timing parameters base model."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", validate_default=True)
     volume_timing_s: Optional[list[float]] = Field(
         None,
         description="The time at which each volume was acquired during the acquisition. "
@@ -273,7 +302,7 @@ class TimingParametersBase(BaseModel):
         "not be possible.",
         alias="SliceTiming",
     )
-    slice_encoding_direction: Optional[SliceEncodingDirection] = Field(
+    slice_encoding_direction: Recommended[SliceEncodingDirection] = Field(
         None,
         description="The axis of the NIfTI data along which slices were acquired, and the "
         "direction in which 'SliceTiming' is defined with respect to. i, j, k identifiers "
@@ -311,7 +340,7 @@ class TimingParametersBase(BaseModel):
         ge=0,
     )
 
-    @field_validator("volume_timing")
+    @field_validator("volume_timing_s")
     @classmethod
     def validate_volume_timing_monotonic(cls, v: list[float]) -> list[float]:
         if (v is not None) and (not all(v[i] <= v[i + 1] for i in range(len(v) - 1))):
@@ -331,7 +360,7 @@ class TimingOptionConfigError(ValueError):
 class TimingOptionBase(TimingParametersBase):
     """Base class for timing options with shared validation logic."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", validate_default=True)
 
     required_fields: ClassVar[set[str]] = set()
     forbidden_fields: ClassVar[set[str]] = set()
@@ -426,13 +455,13 @@ class TimingParameters(TimingParametersBase):
 class TaskInformation(BaseModel):
     """Behavioral/cognitive task."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", validate_default=True)
     task_name: str = Field(
         ...,
         description="Name of the task. No two tasks should have the same name.",
         alias="TaskName",
     )
-    task_description: Optional[str] = Field(
+    task_description: Recommended[str] = Field(
         None,
         description="Longer description of the task.",
         alias="TaskDescription",
@@ -452,18 +481,18 @@ class TaskInformation(BaseModel):
 class InstitutionInformation(BaseModel):
     """Experiment institution."""
 
-    model_config = ConfigDict(extra="allow")
-    institution_name: Optional[str] = Field(
+    model_config = ConfigDict(extra="allow", validate_default=True)
+    institution_name: Recommended[str] = Field(
         None,
         description="The name of the institution in charge of the equipment that produced the measurements.",
         alias="InstitutionName",
     )
-    institution_address: Optional[str] = Field(
+    institution_address: Recommended[str] = Field(
         None,
         description="The address of the institution in charge of the equipment that produced the measurements.",
         alias="InstitutionAddress",
     )
-    institutional_department_name: Optional[str] = Field(
+    institutional_department_name: Recommended[str] = Field(
         None,
         description="The department in the institution in charge of the equipment that produced the measurements.",
         alias="InstitutionalDepartmentName",

@@ -8,6 +8,7 @@ keywords = ['fUSI', 'bids', 'pydantic']
 requires-python = ">=3.9,<4.0"
 dependencies = [
     "pydantic>=2.4.0",
+    "typing-extensions>=4.6.0",  # TypeAliasType
 ]
 classifiers = [
     "Intended Audience :: Developers",
