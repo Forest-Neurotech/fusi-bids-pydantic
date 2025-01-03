@@ -1,6 +1,5 @@
 """fUSI-BIDS Pydantic models for sidecar JSON schema."""
 
-import contextlib
 import warnings
 from enum import Enum
 from typing import Annotated, Any, ClassVar, Optional, Union
@@ -567,30 +566,3 @@ class FUSISidecar(
     """Complete fUSI-BIDS sidecar JSON specification model."""
 
     model_config = ConfigDict(extra="allow", validate_default=True)
-
-
-# Example usage:
-if __name__ == "__main__":
-    from collections.abc import Callable
-
-    log: Callable = print
-    with contextlib.suppress(ImportError):
-        from rich.pretty import pprint
-
-        log = pprint
-
-    # Example sidecar data
-    example_data = {
-        "Manufacturer": "Example Manufacturer",
-        "ManufacturersModelName": "Example Model",
-        "ProbeType": "linear",
-        "ProbeCentralFrequency": 15.0,
-        "RepetitionTime": 1.5,
-        "TaskName": "rest",
-        "TaskDescription": "Resting state acquisition",
-    }
-
-    sidecar = FUSISidecar.model_validate(example_data)
-
-    _ = sidecar.model_dump_json(indent=4)
-    log(sidecar)
