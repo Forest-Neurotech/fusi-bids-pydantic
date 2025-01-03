@@ -1,0 +1,31 @@
+name: Build and publish package
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if branch is not main
+        if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
+        run: |
+          echo "Wheels should not be published from a branch other than main"
+          exit 1
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up the environment
+        uses: ./.github/actions/setup-python-env
+
+      - name: Build wheel
+        # https://docs.astral.sh/uv/guides/publish/#building-your-package
+        run: uv build --no-sources --wheel
+
+      - name: Publish to Gemfury
+        run: uv publish
+        # https://gemfury.com/guide/python/upload-with-twine/
+        env:
+          UV_PUBLISH_URL: "https://pypi.fury.io/forest-neurotech/"
+          UV_PUBLISH_USERNAME: ${{ secrets.FURY_PUSH_TOKEN }}
