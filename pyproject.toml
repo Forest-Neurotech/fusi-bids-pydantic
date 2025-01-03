@@ -54,7 +54,7 @@ show_error_codes = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 filterwarnings = [
-#   "error",  # make warnings errors
+  "error",  # make warnings errors
 ]
 
 [tool.ruff]
