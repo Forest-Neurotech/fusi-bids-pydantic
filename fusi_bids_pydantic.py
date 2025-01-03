@@ -3,10 +3,11 @@
 import contextlib
 import warnings
 from enum import Enum
-from typing import Annotated, Any, ClassVar, Optional, TypeVar, Union
+from typing import Annotated, Any, ClassVar, Optional, Union
 
 from pydantic import (
     AfterValidator,
+    AnyUrl,
     BaseModel,
     ConfigDict,
     Field,
@@ -19,104 +20,114 @@ from pydantic import (
     field_validator,
     model_validator,
 )
-from typing_extensions import TypeAliasType
 
 
 def warn_if_none(value: Any, info: ValidationInfo) -> Any:
+    """AfterValidator for RECOMMENDED fields.
+
+    This validator will warn if the field is None.
+    """
     if value is None:
         warnings.warn(f"RECOMMENDED field {info.field_name} is not set.", stacklevel=2)
     return value
-
-
-# Alias for RECOMMENDED fields
-T = TypeVar("T")
-Recommended = TypeAliasType(
-    "Recommended",
-    Annotated[Optional[T], AfterValidator(warn_if_none)],
-    type_params=(T,),
-)
 
 
 class Hardware(BaseModel):
     """Scanner and probe hardware information."""
 
     model_config = ConfigDict(extra="allow", validate_default=True)
-    manufacturer: Recommended[str] = Field(
+    manufacturer: Annotated[Optional[str], AfterValidator(warn_if_none)] = Field(
         None,
         description="Manufacturer of the ultrasound scanner that produced the measurements.",
         alias="Manufacturer",
     )
-    manufacturers_model_name: Recommended[str] = Field(
-        None,
-        description="Manufacturer's model name of the ultrasound scanner that produced the measurements.",
-        alias="ManufacturersModelName",
+    manufacturers_model_name: Annotated[Optional[str], AfterValidator(warn_if_none)] = (
+        Field(
+            None,
+            description="Manufacturer's model name of the ultrasound scanner that produced the measurements.",
+            alias="ManufacturersModelName",
+        )
     )
-    device_serial_number: Recommended[str] = Field(
-        None,
-        description="The serial number of the ultrasound scanner that produced the measurements. "
-        "A pseudonym can also be used to prevent the equipment from being identifiable, "
-        "so long as each pseudonym is unique within the dataset.",
-        alias="DeviceSerialNumber",
+    device_serial_number: Annotated[Optional[str], AfterValidator(warn_if_none)] = (
+        Field(
+            None,
+            description="The serial number of the ultrasound scanner that produced the measurements. "
+            "A pseudonym can also be used to prevent the equipment from being identifiable, "
+            "so long as each pseudonym is unique within the dataset.",
+            alias="DeviceSerialNumber",
+        )
     )
-    station_name: Recommended[str] = Field(
+    station_name: Annotated[Optional[str], AfterValidator(warn_if_none)] = Field(
         None,
         description="Institution-defined name of the ultrasound scanner that produced the measurements.",
         alias="StationName",
     )
-    software_versions: Recommended[str] = Field(
+    software_versions: Annotated[Optional[str], AfterValidator(warn_if_none)] = Field(
         None,
         description="Manufacturer's designation of the software version of the ultrasound scanner "
         "that produced the measurements.",
         alias="SoftwareVersions",
     )
-    probe_manufacturer: Recommended[str] = Field(
+    probe_manufacturer: Annotated[Optional[str], AfterValidator(warn_if_none)] = Field(
         None,
         description="Manufacturer of the ultrasound probe that produced the measurements.",
         alias="ProbeManufacturer",
     )
-    probe_type: Recommended[str] = Field(
+    probe_type: Annotated[Optional[str], AfterValidator(warn_if_none)] = Field(
         None,
         description="Information describing the ultrasound probe type, e.g. linear, RCA, multiarray, etc.).",
         alias="ProbeType",
     )
-    probe_model: Recommended[str] = Field(
+    probe_model: Annotated[Optional[str], AfterValidator(warn_if_none)] = Field(
         None,
         description="Manufacturer's model name of the ultrasound probe used to produce the measurements.",
         alias="ProbeModel",
     )
-    probe_central_frequency_mhz: Recommended[NonNegativeFloat] = Field(
+    probe_central_frequency_mhz: Annotated[
+        Optional[NonNegativeFloat], AfterValidator(warn_if_none)
+    ] = Field(
         None,
         description="Central frequency of the ultrasound probe, in megahertz.",
         alias="ProbeCentralFrequency",
     )
-    probe_number_of_elements: Recommended[Union[PositiveInt, list[PositiveInt]]] = (
+    probe_number_of_elements: Annotated[
+        Optional[Union[PositiveInt, list[PositiveInt]]], AfterValidator(warn_if_none)
+    ] = Field(
+        None,
+        description="Number of probe transducers along each probe axis (e.g. [32, 32] for a 32x32 matrix probe).",
+        alias="ProbeNumberOfElements",
+    )
+    probe_pitch_mm: Annotated[Optional[PositiveFloat], AfterValidator(warn_if_none)] = (
         Field(
             None,
-            description="Number of probe transducers along each probe axis (e.g. [32, 32] for a 32x32 matrix probe).",
-            alias="ProbeNumberOfElements",
+            description="Inter-element pitch of the probe, in millimeters.",
+            alias="ProbePitch",
         )
     )
-    probe_pitch_mm: Recommended[PositiveFloat] = Field(
-        None,
-        description="Inter-element pitch of the probe, in millimeters.",
-        alias="ProbePitch",
-    )
-    probe_radius_of_curvature_deg: Recommended[float] = Field(
+    probe_radius_of_curvature_deg: Annotated[
+        Optional[float], AfterValidator(warn_if_none)
+    ] = Field(
         None,
         description="Radius of curvature of the probe, in degrees.",
         alias="ProbeRadiusOfCurvature",
     )
-    probe_elevation_width_mm: Recommended[PositiveFloat] = Field(
+    probe_elevation_width_mm: Annotated[
+        Optional[PositiveFloat], AfterValidator(warn_if_none)
+    ] = Field(
         None,
         description="Elevation width at the probe focal point, in millimeters.",
         alias="ProbeElevationWidth",
     )
-    probe_elevation_aperture_mm: Recommended[PositiveFloat] = Field(
+    probe_elevation_aperture_mm: Annotated[
+        Optional[PositiveFloat], AfterValidator(warn_if_none)
+    ] = Field(
         None,
         description="Elevation aperture of the probe, in millimeters.",
         alias="ProbeElevationAperture",
     )
-    probe_elevation_focus_mm: Recommended[PositiveFloat] = Field(
+    probe_elevation_focus_mm: Annotated[
+        Optional[PositiveFloat], AfterValidator(warn_if_none)
+    ] = Field(
         None,
         description="Elevation focus of the probe, in millimeters.",
         alias="ProbeElevationFocus",
@@ -136,22 +147,30 @@ class SequenceSpecifics(BaseModel):
     """Transmit-receive sequence"""
 
     model_config = ConfigDict(extra="allow", validate_default=True)
-    depth_mm: Recommended[list[FiniteFloat]] = Field(
-        None,
-        description="Minimal and maximal depth of the field of view from the probe surface, e.g. [4,14], in millimeters.",
-        alias="Depth",
+    depth_mm: Annotated[Optional[list[FiniteFloat]], AfterValidator(warn_if_none)] = (
+        Field(
+            None,
+            description="Minimal and maximal depth of the field of view from the probe surface, e.g. [4,14], in millimeters.",
+            alias="Depth",
+        )
     )
-    ultrasound_pulse_repetition_frequency_hz: Recommended[PositiveFloat] = Field(
+    ultrasound_pulse_repetition_frequency_hz: Annotated[
+        Optional[PositiveFloat], AfterValidator(warn_if_none)
+    ] = Field(
         None,
         description="Pulse repetition frequency, in hertz.",
         alias="UltrasoundPulseRepetitionFrequency",
     )
-    plane_wave_angles_deg: Recommended[Union[FiniteFloat, list[FiniteFloat]]] = Field(
+    plane_wave_angles_deg: Annotated[
+        Optional[Union[FiniteFloat, list[FiniteFloat]]], AfterValidator(warn_if_none)
+    ] = Field(
         None,
         description="Angles at which tilted plane waves are emitted, in degrees.",
         alias="PlaneWaveAngles",
     )
-    ultrafast_sampling_frequency_hz: Recommended[PositiveFloat] = Field(
+    ultrafast_sampling_frequency_hz: Annotated[
+        Optional[PositiveFloat], AfterValidator(warn_if_none)
+    ] = Field(
         None,
         description="Sampling frequency of the compounded volumes, in hertz. Note that UltrafastSamplingFrequency "
         "should be equal to UltrasoundPulseRepetitionFrequency divided by the number of tilted plane "
@@ -170,7 +189,7 @@ class SequenceSpecifics(BaseModel):
         description="Voltage applied to the probe, in volts.",
         alias="ProbeVoltage",
     )
-    sequence_name: Recommended[str] = Field(
+    sequence_name: Annotated[Optional[str], AfterValidator(warn_if_none)] = Field(
         None,
         description="Manufacturer's designation of the sequence name.",
         alias="SequenceName",
@@ -212,12 +231,16 @@ class ClutterFiltering(BaseModel):
     """Clutter filtering."""
 
     model_config = ConfigDict(extra="allow", validate_default=True)
-    clutter_filter_window_duration_ms: Recommended[PositiveFloat] = Field(
+    clutter_filter_window_duration_ms: Annotated[
+        Optional[PositiveFloat], AfterValidator(warn_if_none)
+    ] = Field(
         None,
         description="Duration of the clutter filter window, in milliseconds.",
         alias="ClutterFilterWindowDuration",
     )
-    clutter_filters: Recommended[list[ClutterFilter]] = Field(
+    clutter_filters: Annotated[
+        Optional[list[ClutterFilter]], AfterValidator(warn_if_none)
+    ] = Field(
         None,
         description="Clutter filter methods used to remove clutter artifacts.",
         alias="ClutterFilters",
@@ -228,12 +251,14 @@ class PowerDopplerIntegration(BaseModel):
     """Power Doppler integration window."""
 
     model_config = ConfigDict(extra="allow", validate_default=True)
-    power_doppler_integration_duration_ms: Recommended[PositiveFloat] = Field(
+    power_doppler_integration_duration_ms: Annotated[
+        Optional[PositiveFloat], AfterValidator(warn_if_none)
+    ] = Field(
         None,
         description="Duration of the power Doppler integration window, in milliseconds.",
         alias="PowerDopplerIntegrationDuration",
     )
-    power_doppler_integration_stride_ms: Recommended[PositiveFloat] = Field(
+    power_doppler_integration_stride_ms: Optional[PositiveFloat] = Field(
         None,
         description="Stride from one power Doppler integration window to another, in milliseconds. "
         "Assumed equal to the PowerDopplerIntegrationDuration as default.",
@@ -265,7 +290,7 @@ class TimingParametersBase(BaseModel):
     """Timing parameters base model."""
 
     model_config = ConfigDict(extra="allow", validate_default=True)
-    volume_timing_s: Optional[list[float]] = Field(
+    volume_timing_s: Optional[list[NonNegativeFloat]] = Field(
         None,
         description="The time at which each volume was acquired during the acquisition. "
         "It is described using a list of times referring to the onset of each volume in the series. "
@@ -274,7 +299,6 @@ class TimingParametersBase(BaseModel):
         "'RepetitionTime'. This field is mutually exclusive with 'DelayTime'. If defined, "
         "this requires acquisition time (TA) be defined via either 'SliceTiming' or 'AcquisitionDuration'.",
         alias="VolumeTiming",
-        ge=0,
     )
     repetition_time_s: Optional[float] = Field(
         None,
@@ -302,7 +326,9 @@ class TimingParametersBase(BaseModel):
         "not be possible.",
         alias="SliceTiming",
     )
-    slice_encoding_direction: Recommended[SliceEncodingDirection] = Field(
+    slice_encoding_direction: Annotated[
+        Optional[SliceEncodingDirection], AfterValidator(warn_if_none)
+    ] = Field(
         None,
         description="The axis of the NIfTI data along which slices were acquired, and the "
         "direction in which 'SliceTiming' is defined with respect to. i, j, k identifiers "
@@ -315,8 +341,8 @@ class TimingParametersBase(BaseModel):
         "the order of increasing slice index as defined by the NIfTI header.",
         alias="SliceEncodingDirection",
     )
-    delay_time_s: float = Field(
-        0,
+    delay_time_s: Optional[float] = Field(
+        None,
         description="User specified time (in seconds) to delay the acquisition of data for "
         "the following volume. If the field is not present it is assumed to be set to zero. "
         "This field is REQUIRED for sparse sequences using the 'RepetitionTime' field that "
@@ -332,12 +358,14 @@ class TimingParametersBase(BaseModel):
         alias="AcquisitionDuration",
         gt=0,
     )
-    delay_after_trigger_s: Optional[float] = Field(
-        None,
-        description="Duration (in seconds) from trigger delivery to scan onset. This delay "
-        "is commonly caused by adjustments, loading times, or robot movement.",
-        alias="DelayAfterTrigger",
-        ge=0,
+    delay_after_trigger_s: Annotated[Optional[float], AfterValidator(warn_if_none)] = (
+        Field(
+            None,
+            description="Duration (in seconds) from trigger delivery to scan onset. This delay "
+            "is commonly caused by adjustments, loading times, or robot movement.",
+            alias="DelayAfterTrigger",
+            ge=0,
+        )
     )
 
     @field_validator("volume_timing_s")
@@ -345,6 +373,32 @@ class TimingParametersBase(BaseModel):
     def validate_volume_timing_monotonic(cls, v: list[float]) -> list[float]:
         if (v is not None) and (not all(v[i] <= v[i + 1] for i in range(len(v) - 1))):
             raise ValueError("Values must be monotonically increasing")
+        return v
+
+    @field_validator("delay_time_s")
+    @classmethod
+    def validate_delay_time(
+        cls, v: Optional[float], info: ValidationInfo
+    ) -> Optional[float]:
+        volume_timing_s = info.data.get("volume_timing_s")
+        if (v is not None) and (volume_timing_s is not None):
+            raise ValueError("DelayTime is mutually exclusive with VolumeTiming")
+        if (v is None) and (volume_timing_s is None):
+            # Defaults to 0 if not set
+            return 0.0
+        return v
+
+    @field_validator("acquisition_duration_s")
+    @classmethod
+    def validate_acquisition_duration(
+        cls, v: Optional[float], info: ValidationInfo
+    ) -> Optional[float]:
+        """Mutually exclusive with RepetitionTime."""
+        repetition_time_s = info.data.get("repetition_time_s")
+        if (v is not None) and (repetition_time_s is not None):
+            raise ValueError(
+                "Acquisition duration is mutually exclusive with RepetitionTime"
+            )
         return v
 
 
@@ -412,7 +466,7 @@ class TimingOptionD(TimingOptionBase):
     """Timing option D."""
 
     required_fields = {"repetition_time_s", "slice_timing_s"}
-    forbidden_fields = {"acquisition_duration_s", "delay_time_s", "volume_timing_s"}
+    forbidden_fields = {"acquisition_duration_s", "volume_timing_s"}
 
 
 class TimingOptionE(TimingOptionBase):
@@ -461,17 +515,17 @@ class TaskInformation(BaseModel):
         description="Name of the task. No two tasks should have the same name.",
         alias="TaskName",
     )
-    task_description: Recommended[str] = Field(
+    task_description: Annotated[Optional[str], AfterValidator(warn_if_none)] = Field(
         None,
         description="Longer description of the task.",
         alias="TaskDescription",
     )
-    cog_atlas_id: Optional[str] = Field(
+    cog_atlas_id: Optional[AnyUrl] = Field(
         None,
         description="URI of the corresponding Cognitive Atlas Task term.",
         alias="CogAtlasID",
     )
-    cog_po_id: Optional[str] = Field(
+    cog_po_id: Optional[AnyUrl] = Field(
         None,
         description="URI of the corresponding CogPO term.",
         alias="CogPOID",
@@ -482,17 +536,19 @@ class InstitutionInformation(BaseModel):
     """Experiment institution."""
 
     model_config = ConfigDict(extra="allow", validate_default=True)
-    institution_name: Recommended[str] = Field(
+    institution_name: Annotated[Optional[str], AfterValidator(warn_if_none)] = Field(
         None,
         description="The name of the institution in charge of the equipment that produced the measurements.",
         alias="InstitutionName",
     )
-    institution_address: Recommended[str] = Field(
+    institution_address: Annotated[Optional[str], AfterValidator(warn_if_none)] = Field(
         None,
         description="The address of the institution in charge of the equipment that produced the measurements.",
         alias="InstitutionAddress",
     )
-    institutional_department_name: Recommended[str] = Field(
+    institutional_department_name: Annotated[
+        Optional[str], AfterValidator(warn_if_none)
+    ] = Field(
         None,
         description="The department in the institution in charge of the equipment that produced the measurements.",
         alias="InstitutionalDepartmentName",
@@ -510,7 +566,7 @@ class FUSISidecar(
 ):
     """Complete fUSI-BIDS sidecar JSON specification model."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", validate_default=True)
 
 
 # Example usage:
