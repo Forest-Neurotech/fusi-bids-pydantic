@@ -131,7 +131,7 @@ wheels = [
 
 [[package]]
 name = "fusi-bids-pydantic"
-version = "0.0.1"
+version = "0.0.10"
 source = { editable = "." }
 dependencies = [
     { name = "pydantic" },

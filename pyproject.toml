@@ -1,6 +1,6 @@
 [project]
 name = "fusi-bids-pydantic"
-version = "0.0.1"
+version = "0.0.10"
 description = "Pydantic model for fUSI-BIDS extension proposal (BEP) sidecar JSON schema"
 authors = [{ name = "Charles Guan", email = "charles@forestneurotech.org" }]
 readme = "README.md"
@@ -54,7 +54,7 @@ show_error_codes = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 filterwarnings = [
-#   "error",  # make warnings errors
+  "error",  # make warnings errors
 ]
 
 [tool.ruff]

@@ -1,0 +1,3 @@
+[submodule "tests/fusi-bids-examples"]
+	path = tests/fusi-bids-examples
+	url = https://github.com/sdiebolt/fusi-bids-examples.git
