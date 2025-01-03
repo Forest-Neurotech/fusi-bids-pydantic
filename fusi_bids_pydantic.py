@@ -1,4 +1,7 @@
-"""fUSI-BIDS Pydantic models for sidecar JSON schema."""
+"""fUSI-BIDS Pydantic models for sidecar JSON schema.
+
+Ported from https://bids.neuroimaging.io/bep040
+"""
 
 import warnings
 from enum import Enum

@@ -6,6 +6,7 @@
 
 Pydantic model for fUSI-BIDS extension proposal (BEP) sidecar JSON schema
 
+- **Ported from**: <https://bids.neuroimaging.io/bep040>
 - **Github repository**: <https://github.com/Forest-Neurotech/fusi-bids-pydantic/>
 
 
@@ -35,11 +36,11 @@ make install
 ```python
 from fusi_bids_pydantic import FUSISidecar
 
-example_sidecar_data = {
+example_merged_sidecar_data = {
     "TaskName": "example_task",
     "RepetitionTime": 1.5,
     "Manufacturer": "example_manufacturer",
 }
-sidecar = FUSISidecar.model_validate(example_sidecar_data)
+sidecar = FUSISidecar.model_validate(example_merged_sidecar_data)
 # Warns about missing RECOMMENDED fields
 ```
