@@ -53,6 +53,9 @@ show_error_codes = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+filterwarnings = [
+#   "error",  # make warnings errors
+]
 
 [tool.ruff]
 target-version = "py39"
@@ -112,4 +115,4 @@ skip_empty = true
 
 [tool.coverage.run]
 branch = true
-source = ["fusi_bids_pydantic.py"]
+source = ["fusi_bids_pydantic"]
