@@ -115,4 +115,4 @@ skip_empty = true
 
 [tool.coverage.run]
 branch = true
-source = ["fusi_bids_pydantic.py"]
+source = ["fusi_bids_pydantic"]
