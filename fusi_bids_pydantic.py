@@ -59,6 +59,16 @@ class Hardware(BaseModel):
             alias="DeviceSerialNumber",
         )
     )
+    transducer_serial_number: Optional[str] = Field(
+        None,
+        description="The serial number of the  detachable ultrasound transducer that produced the measurements.",
+        alias="TransducerSerialNumber",
+    )
+    laptop_serial_number: Optional[str] = Field(
+        None,
+        description="The serial number of the laptop that produced the measurements.",
+        alias="LaptopSerialNumber",
+    )
     station_name: Annotated[Optional[str], AfterValidator(warn_if_none)] = Field(
         None,
         description="Institution-defined name of the ultrasound scanner that produced the measurements.",
