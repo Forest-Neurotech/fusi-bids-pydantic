@@ -41,7 +41,7 @@ def get_unique_contents(json_paths: list[Path]) -> list[Path]:
 @pytest.fixture
 def dataset_path() -> Path:
     """Path to the example dataset."""
-    return Path(__file__).parent / "fusi-bids-examples" / "datasets" / "0.0.10"
+    return Path(__file__).parent / "fusi-bids-examples" / "datasets" / "0.0.11"
 
 
 @pytest.fixture
@@ -56,6 +56,9 @@ def pwd_json(dataset_path: Path) -> dict:
 )
 @pytest.mark.filterwarnings(
     "ignore:RECOMMENDED field probe_elevation_width_mm is not set:UserWarning"
+)
+@pytest.mark.filterwarnings(
+    "ignore:RECOMMENDED field plane_wave_azimuth_angles_deg is not set:UserWarning"
 )
 @pytest.mark.filterwarnings(
     "ignore:RECOMMENDED field slice_encoding_direction is not set:UserWarning"

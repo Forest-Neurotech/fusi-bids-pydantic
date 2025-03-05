@@ -35,6 +35,7 @@ def hardware_data():
         "ProbeManufacturer": "Example Probe Manufacturer",
         "ProbeType": "linear",
         "ProbeModel": "Example Probe Model",
+        "ProbeSerialNumber": "PROBE123456",
         "ProbeCentralFrequency": 15.0,
         "ProbeNumberOfElements": [32, 32],
         "ProbePitch": 0.3,
@@ -50,8 +51,10 @@ def sequence_data():
     """Valid sequence specifics data fixture."""
     return {
         "Depth": [4.0, 14.0],
+        "UltrasoundTransmitFrequency": 15.0,
         "UltrasoundPulseRepetitionFrequency": 1000.0,
-        "PlaneWaveAngles": [-10.0, 0.0, 10.0],
+        "PlaneWaveElevationAngles": [-10.0, 0.0, 10.0],
+        "PlaneWaveAzimuthAngles": [-5.0, 0.0, 5.0],
         "UltrafastSamplingFrequency": 333.33,
         "SequenceName": "Example Sequence",
     }
@@ -62,6 +65,7 @@ def clutter_filtering_data():
     """Valid clutter filtering data fixture."""
     return {
         "ClutterFilterWindowDuration": 100.0,
+        "ClutterFilterWindowStride": 50.0,
         "ClutterFilters": [{"FilterType": "SVD"}],
     }
 
@@ -122,10 +126,16 @@ def test_hardware_validation(hardware_data):
         hardware.probe_central_frequency_mhz == hardware_data["ProbeCentralFrequency"]
     )
     assert hardware.probe_number_of_elements == hardware_data["ProbeNumberOfElements"]
+    assert hardware.probe_serial_number == hardware_data["ProbeSerialNumber"]
 
     # Test invalid probe radius of curvature
     with pytest.raises(ValidationError):
         Hardware.model_validate({**hardware_data, "ProbeRadiusOfCurvature": 361.0})
+
+    # Test ProbePitch as array
+    pitch_array_data = {**hardware_data, "ProbePitch": [0.3, 0.4]}
+    hardware = Hardware.model_validate(pitch_array_data)
+    assert hardware.probe_pitch_mm == pitch_array_data["ProbePitch"]
 
 
 def test_sequence_specifics_validation(sequence_data):
@@ -133,11 +143,26 @@ def test_sequence_specifics_validation(sequence_data):
     # Test valid data
     seq = SequenceSpecifics.model_validate(sequence_data)
     assert seq.depth_mm == sequence_data["Depth"]
-    assert seq.plane_wave_angles_deg == sequence_data["PlaneWaveAngles"]
+    assert (
+        seq.plane_wave_elevation_angles_deg == sequence_data["PlaneWaveElevationAngles"]
+    )
+    assert seq.plane_wave_azimuth_angles_deg == sequence_data["PlaneWaveAzimuthAngles"]
+    assert (
+        seq.ultrasound_transmit_frequency_mhz
+        == sequence_data["UltrasoundTransmitFrequency"]
+    )
 
     # Test invalid depth (max < min)
     with pytest.raises(ValidationError):
         SequenceSpecifics.model_validate({**sequence_data, "Depth": [14.0, 4.0]})
+
+    # Test plane wave angles validation (arrays of different lengths)
+    with pytest.raises(ValidationError):
+        SequenceSpecifics.model_validate({
+            **sequence_data,
+            "PlaneWaveElevationAngles": [-10.0, 0.0, 10.0],
+            "PlaneWaveAzimuthAngles": [-5.0, 0.0],  # Different length
+        })
 
 
 def test_clutter_filtering_validation(clutter_filtering_data):
@@ -147,10 +172,23 @@ def test_clutter_filtering_validation(clutter_filtering_data):
         cf.clutter_filter_window_duration_ms
         == clutter_filtering_data["ClutterFilterWindowDuration"]
     )
+    assert (
+        cf.clutter_filter_window_stride_ms
+        == clutter_filtering_data["ClutterFilterWindowStride"]
+    )
     assert len(cf.clutter_filters) == len(clutter_filtering_data["ClutterFilters"])
     assert (
         cf.clutter_filters[0].filter_type
         == clutter_filtering_data["ClutterFilters"][0]["FilterType"]
+    )
+
+    # Test stride defaults to duration when not specified
+    single_param_data = clutter_filtering_data.copy()
+    single_param_data.pop("ClutterFilterWindowStride")
+    cf = ClutterFiltering.model_validate(single_param_data)
+    assert (
+        cf.clutter_filter_window_stride_ms
+        == single_param_data["ClutterFilterWindowDuration"]
     )
 
 

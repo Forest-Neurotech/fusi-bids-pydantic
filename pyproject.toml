@@ -1,6 +1,6 @@
 [project]
 name = "fusi-bids-pydantic"
-version = "0.0.10"
+version = "0.0.11"
 description = "Pydantic model for fUSI-BIDS extension proposal (BEP) sidecar JSON schema"
 authors = [{ name = "Charles Guan", email = "charles@forestneurotech.org" }]
 readme = "README.md"
