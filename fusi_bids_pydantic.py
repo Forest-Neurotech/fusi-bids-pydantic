@@ -85,6 +85,13 @@ class Hardware(BaseModel):
         description="Manufacturer's model name of the ultrasound probe used to produce the measurements.",
         alias="ProbeModel",
     )
+    probe_serial_number: Annotated[Optional[str], AfterValidator(warn_if_none)] = Field(
+        None,
+        description="The serial number of the ultrasound probe that produced the measurements. "
+        "A pseudonym can also be used to prevent the equipment from being identifiable, "
+        "so long as each pseudonym is unique within the dataset.",
+        alias="ProbeSerialNumber",
+    )
     probe_central_frequency_mhz: Annotated[
         Optional[NonNegativeFloat], AfterValidator(warn_if_none)
     ] = Field(
@@ -99,12 +106,14 @@ class Hardware(BaseModel):
         description="Number of probe transducers along each probe axis (e.g. [32, 32] for a 32x32 matrix probe).",
         alias="ProbeNumberOfElements",
     )
-    probe_pitch_mm: Annotated[Optional[PositiveFloat], AfterValidator(warn_if_none)] = (
-        Field(
-            None,
-            description="Inter-element pitch of the probe, in millimeters.",
-            alias="ProbePitch",
-        )
+    probe_pitch_mm: Annotated[
+        Optional[Union[PositiveFloat, list[PositiveFloat]]],
+        AfterValidator(warn_if_none),
+    ] = Field(
+        None,
+        description="Inter-element pitch of the probe, in millimeters. Can be provided as a single number, "
+        "or as an array of probe pitches along the [azimuth, elevation] directions.",
+        alias="ProbePitch",
     )
     probe_radius_of_curvature_deg: Annotated[
         Optional[float], AfterValidator(warn_if_none)
@@ -156,6 +165,13 @@ class SequenceSpecifics(BaseModel):
             alias="Depth",
         )
     )
+    ultrasound_transmit_frequency_mhz: Annotated[
+        Optional[PositiveFloat], AfterValidator(warn_if_none)
+    ] = Field(
+        None,
+        description="Ultrasound transmit frequency, in megahertz.",
+        alias="UltrasoundTransmitFrequency",
+    )
     ultrasound_pulse_repetition_frequency_hz: Annotated[
         Optional[PositiveFloat], AfterValidator(warn_if_none)
     ] = Field(
@@ -163,12 +179,21 @@ class SequenceSpecifics(BaseModel):
         description="Pulse repetition frequency, in hertz.",
         alias="UltrasoundPulseRepetitionFrequency",
     )
-    plane_wave_angles_deg: Annotated[
+    plane_wave_elevation_angles_deg: Annotated[
         Optional[Union[FiniteFloat, list[FiniteFloat]]], AfterValidator(warn_if_none)
     ] = Field(
         None,
-        description="Angles at which tilted plane waves are emitted, in degrees.",
-        alias="PlaneWaveAngles",
+        description="Elevation angles at which tilted plane waves are emitted, in degrees. "
+        "If both PlaneWaveElevationAngles and PlaneWaveAzimuthAngles are arrays, they should have the same length.",
+        alias="PlaneWaveElevationAngles",
+    )
+    plane_wave_azimuth_angles_deg: Annotated[
+        Optional[Union[FiniteFloat, list[FiniteFloat]]], AfterValidator(warn_if_none)
+    ] = Field(
+        None,
+        description="Azimuth angles at which tilted plane waves are emitted, in degrees. "
+        "If both PlaneWaveElevationAngles and PlaneWaveAzimuthAngles are arrays, they should have the same length.",
+        alias="PlaneWaveAzimuthAngles",
     )
     ultrafast_sampling_frequency_hz: Annotated[
         Optional[PositiveFloat], AfterValidator(warn_if_none)
@@ -176,13 +201,13 @@ class SequenceSpecifics(BaseModel):
         None,
         description="Sampling frequency of the compounded volumes, in hertz. Note that UltrafastSamplingFrequency "
         "should be equal to UltrasoundPulseRepetitionFrequency divided by the number of tilted plane "
-        "wave angles defined in PlaneWavesAngles.",
+        "wave angles defined in PlaneWavesElevationAngles or PlaneWaveAzimuthAngles.",
         alias="UltrafastSamplingFrequency",
     )
     compound_virtual_sources: Optional[list[list[float]]] = Field(
         None,
-        description="2D array storing the virtual source positions of diverging waves used to generate compounded "
-        "ultrasound images. Each source position is expressed relative to the probe center with negative "
+        description="2D array storing the virtual source positions (x, y, z) of diverging waves used to generate compounded "
+        "ultrasound images. Each source position is expressed in millimeters relative to the probe center with negative "
         "values in depth for diverging sources.",
         alias="CompoundVirtualSources",
     )
@@ -219,6 +244,24 @@ class SequenceSpecifics(BaseModel):
             raise ValueError(err_msg)
         return v
 
+    @model_validator(mode="after")
+    def validate_plane_wave_angles(self) -> "SequenceSpecifics":
+        """Validate that plane wave elevation and azimuth angles arrays have the same length if both are provided."""
+        elevation_angles = self.plane_wave_elevation_angles_deg
+        azimuth_angles = self.plane_wave_azimuth_angles_deg
+
+        # If both are arrays, check they have the same length
+        if (
+            isinstance(elevation_angles, list)
+            and isinstance(azimuth_angles, list)
+            and len(elevation_angles) != len(azimuth_angles)
+        ):
+            raise ValueError(
+                "PlaneWaveElevationAngles and PlaneWaveAzimuthAngles arrays must have the same length"
+            )
+
+        return self
+
 
 class ClutterFilter(BaseModel):
     """Clutter filter. Allows for extra parameters."""
@@ -240,6 +283,12 @@ class ClutterFiltering(BaseModel):
         description="Duration of the clutter filter window, in milliseconds.",
         alias="ClutterFilterWindowDuration",
     )
+    clutter_filter_window_stride_ms: Optional[PositiveFloat] = Field(
+        None,
+        description="Stride from one clutter filter window to another, in milliseconds. "
+        "Assumed equal to the ClutterFilterWindowDuration as default.",
+        alias="ClutterFilterWindowStride",
+    )
     clutter_filters: Annotated[
         Optional[list[ClutterFilter]], AfterValidator(warn_if_none)
     ] = Field(
@@ -247,6 +296,15 @@ class ClutterFiltering(BaseModel):
         description="Clutter filter methods used to remove clutter artifacts.",
         alias="ClutterFilters",
     )
+
+    @model_validator(mode="after")
+    def stride_defaults_to_duration(self) -> "ClutterFiltering":
+        """If unset, assume ClutterFilterWindowStride is equal to ClutterFilterWindowDuration."""
+        if self.clutter_filter_window_stride_ms is None:
+            self.clutter_filter_window_stride_ms = (
+                self.clutter_filter_window_duration_ms
+            )
+        return self
 
 
 class PowerDopplerIntegration(BaseModel):

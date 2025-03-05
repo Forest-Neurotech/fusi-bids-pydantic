@@ -58,6 +58,9 @@ def pwd_json(dataset_path: Path) -> dict:
     "ignore:RECOMMENDED field probe_elevation_width_mm is not set:UserWarning"
 )
 @pytest.mark.filterwarnings(
+    "ignore:RECOMMENDED field plane_wave_azimuth_angles_deg is not set:UserWarning"
+)
+@pytest.mark.filterwarnings(
     "ignore:RECOMMENDED field slice_encoding_direction is not set:UserWarning"
 )
 @pytest.mark.filterwarnings(
