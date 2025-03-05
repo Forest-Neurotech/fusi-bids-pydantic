@@ -41,7 +41,7 @@ def get_unique_contents(json_paths: list[Path]) -> list[Path]:
 @pytest.fixture
 def dataset_path() -> Path:
     """Path to the example dataset."""
-    return Path(__file__).parent / "fusi-bids-examples" / "datasets" / "0.0.10"
+    return Path(__file__).parent / "fusi-bids-examples" / "datasets" / "0.0.11"
 
 
 @pytest.fixture
