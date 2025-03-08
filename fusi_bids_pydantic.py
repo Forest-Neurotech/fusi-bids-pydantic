@@ -39,6 +39,7 @@ class Hardware(BaseModel):
 
     model_config = ConfigDict(
         extra="allow",
+        frozen=True,  # adds __hash__ method
         populate_by_name=True,
         validate_default=True,
     )
@@ -163,6 +164,7 @@ class SequenceSpecifics(BaseModel):
 
     model_config = ConfigDict(
         extra="allow",
+        frozen=True,  # adds __hash__ method
         populate_by_name=True,
         validate_default=True,
     )
@@ -276,6 +278,7 @@ class ClutterFilter(BaseModel):
 
     model_config = ConfigDict(
         extra="allow",
+        frozen=True,  # adds __hash__ method
         populate_by_name=True,
         validate_default=True,
     )
@@ -289,6 +292,7 @@ class ClutterFiltering(BaseModel):
 
     model_config = ConfigDict(
         extra="allow",
+        frozen=True,  # adds __hash__ method
         populate_by_name=True,
         validate_default=True,
     )
@@ -328,6 +332,7 @@ class PowerDopplerIntegration(BaseModel):
 
     model_config = ConfigDict(
         extra="allow",
+        frozen=True,  # adds __hash__ method
         populate_by_name=True,
         validate_default=True,
     )
@@ -371,6 +376,7 @@ class TimingParametersBase(BaseModel):
 
     model_config = ConfigDict(
         extra="allow",
+        frozen=True,  # adds __hash__ method
         populate_by_name=True,
         validate_default=True,
     )
@@ -593,6 +599,7 @@ class TaskInformation(BaseModel):
 
     model_config = ConfigDict(
         extra="allow",
+        frozen=True,  # adds __hash__ method
         populate_by_name=True,
         validate_default=True,
     )
@@ -623,6 +630,7 @@ class InstitutionInformation(BaseModel):
 
     model_config = ConfigDict(
         extra="allow",
+        frozen=True,  # adds __hash__ method
         populate_by_name=True,
         validate_default=True,
     )
@@ -658,6 +666,7 @@ class FUSISidecar(
 
     model_config = ConfigDict(
         extra="allow",
+        frozen=True,  # adds __hash__ method
         populate_by_name=True,
         validate_default=True,
     )
