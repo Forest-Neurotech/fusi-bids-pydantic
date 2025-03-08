@@ -37,7 +37,11 @@ def warn_if_none(value: Any, info: ValidationInfo) -> Any:
 class Hardware(BaseModel):
     """Scanner and probe hardware information."""
 
-    model_config = ConfigDict(extra="allow", validate_default=True)
+    model_config = ConfigDict(
+        extra="allow",
+        populate_by_name=True,
+        validate_default=True,
+    )
     manufacturer: Annotated[Optional[str], AfterValidator(warn_if_none)] = Field(
         None,
         description="Manufacturer of the ultrasound scanner that produced the measurements.",
@@ -157,7 +161,11 @@ class Hardware(BaseModel):
 class SequenceSpecifics(BaseModel):
     """Transmit-receive sequence"""
 
-    model_config = ConfigDict(extra="allow", validate_default=True)
+    model_config = ConfigDict(
+        extra="allow",
+        populate_by_name=True,
+        validate_default=True,
+    )
     depth_mm: Annotated[Optional[list[FiniteFloat]], AfterValidator(warn_if_none)] = (
         Field(
             None,
@@ -266,7 +274,11 @@ class SequenceSpecifics(BaseModel):
 class ClutterFilter(BaseModel):
     """Clutter filter. Allows for extra parameters."""
 
-    model_config = ConfigDict(extra="allow", validate_default=True)
+    model_config = ConfigDict(
+        extra="allow",
+        populate_by_name=True,
+        validate_default=True,
+    )
     filter_type: str = Field(
         ..., description="Type of clutter filter applied", alias="FilterType"
     )
@@ -275,7 +287,11 @@ class ClutterFilter(BaseModel):
 class ClutterFiltering(BaseModel):
     """Clutter filtering."""
 
-    model_config = ConfigDict(extra="allow", validate_default=True)
+    model_config = ConfigDict(
+        extra="allow",
+        populate_by_name=True,
+        validate_default=True,
+    )
     clutter_filter_window_duration_ms: Annotated[
         Optional[PositiveFloat], AfterValidator(warn_if_none)
     ] = Field(
@@ -310,7 +326,11 @@ class ClutterFiltering(BaseModel):
 class PowerDopplerIntegration(BaseModel):
     """Power Doppler integration window."""
 
-    model_config = ConfigDict(extra="allow", validate_default=True)
+    model_config = ConfigDict(
+        extra="allow",
+        populate_by_name=True,
+        validate_default=True,
+    )
     power_doppler_integration_duration_ms: Annotated[
         Optional[PositiveFloat], AfterValidator(warn_if_none)
     ] = Field(
@@ -349,7 +369,11 @@ class SliceEncodingDirection(str, Enum):
 class TimingParametersBase(BaseModel):
     """Timing parameters base model."""
 
-    model_config = ConfigDict(extra="allow", validate_default=True)
+    model_config = ConfigDict(
+        extra="allow",
+        populate_by_name=True,
+        validate_default=True,
+    )
     volume_timing_s: Optional[list[NonNegativeFloat]] = Field(
         None,
         description="The time at which each volume was acquired during the acquisition. "
@@ -474,8 +498,6 @@ class TimingOptionConfigError(ValueError):
 class TimingOptionBase(TimingParametersBase):
     """Base class for timing options with shared validation logic."""
 
-    model_config = ConfigDict(extra="allow", validate_default=True)
-
     required_fields: ClassVar[set[str]] = set()
     forbidden_fields: ClassVar[set[str]] = set()
 
@@ -569,7 +591,11 @@ class TimingParameters(TimingParametersBase):
 class TaskInformation(BaseModel):
     """Behavioral/cognitive task."""
 
-    model_config = ConfigDict(extra="allow", validate_default=True)
+    model_config = ConfigDict(
+        extra="allow",
+        populate_by_name=True,
+        validate_default=True,
+    )
     task_name: str = Field(
         ...,
         description="Name of the task. No two tasks should have the same name.",
@@ -595,7 +621,11 @@ class TaskInformation(BaseModel):
 class InstitutionInformation(BaseModel):
     """Experiment institution."""
 
-    model_config = ConfigDict(extra="allow", validate_default=True)
+    model_config = ConfigDict(
+        extra="allow",
+        populate_by_name=True,
+        validate_default=True,
+    )
     institution_name: Annotated[Optional[str], AfterValidator(warn_if_none)] = Field(
         None,
         description="The name of the institution in charge of the equipment that produced the measurements.",
@@ -626,4 +656,8 @@ class FUSISidecar(
 ):
     """Complete fUSI-BIDS sidecar JSON specification model."""
 
-    model_config = ConfigDict(extra="allow", validate_default=True)
+    model_config = ConfigDict(
+        extra="allow",
+        populate_by_name=True,
+        validate_default=True,
+    )
