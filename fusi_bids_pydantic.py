@@ -595,10 +595,15 @@ class TimingParameters(TimingParametersBase):
             else:
                 return self
 
-        raise ValueError(
-            "Timing parameters must conform to one of the defined options (A-E).\n"
-            "Validation failed for all timing-config options:\n - "
-            "\n - ".join(str(err) for err in errors)
+        # Raise a single error that includes all the line-errors
+        all_line_errors = []
+        for validation_error in errors:
+            line_errors = validation_error.errors()
+            all_line_errors.extend(line_errors)
+        raise ValidationError.from_exception_data(
+            title="TimingParameters: no valid timing option found (A-E)",
+            # This is a Python-Rust wrapper, so we need to ignore the type error
+            line_errors=all_line_errors,  # type: ignore[arg-type]
         )
 
 
