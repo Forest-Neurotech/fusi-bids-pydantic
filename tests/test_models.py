@@ -293,6 +293,12 @@ def test_timing_options(timing_option_a_data, timing_options_common_data):
             **timing_options_common_data,
         })
 
+    # Test top-level validator
+    with pytest.raises(ValidationError, match="validation errors"):
+        TimingParameters.model_validate({
+            **timing_options_common_data,
+        })
+
 
 def test_task_information_validation(task_data):
     """Test TaskInformation model validation."""
