@@ -321,9 +321,13 @@ class ClutterFiltering(BaseModel):
     def stride_defaults_to_duration(self) -> "ClutterFiltering":
         """If unset, assume ClutterFilterWindowStride is equal to ClutterFilterWindowDuration."""
         if self.clutter_filter_window_stride_ms is None:
-            self.clutter_filter_window_stride_ms = (
-                self.clutter_filter_window_duration_ms
+            # Need to make a copy to avoid mutating the original (frozen) object
+            copy = self.model_copy(
+                update={
+                    "clutter_filter_window_stride_ms": self.clutter_filter_window_duration_ms
+                }
             )
+            return copy
         return self
 
 
@@ -354,9 +358,13 @@ class PowerDopplerIntegration(BaseModel):
     def stride_defaults_to_duration(self) -> "PowerDopplerIntegration":
         """If unset, assume PowerDopplerIntegrationStride is equal to PowerDopplerIntegrationDuration."""
         if self.power_doppler_integration_stride_ms is None:
-            self.power_doppler_integration_stride_ms = (
-                self.power_doppler_integration_duration_ms
+            # Need to make a copy to avoid mutating the original (frozen) object
+            copy = self.model_copy(
+                update={
+                    "power_doppler_integration_stride_ms": self.power_doppler_integration_duration_ms
+                }
             )
+            return copy
         return self
 
 
