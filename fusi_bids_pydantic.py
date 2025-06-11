@@ -142,7 +142,7 @@ class Hardware(BaseModel):
         alias="ProbeElevationAperture",
     )
     probe_elevation_focus_mm: Annotated[
-        Optional[PositiveFloat], AfterValidator(warn_if_none)
+        Optional[float], AfterValidator(warn_if_none)
     ] = Field(
         None,
         description="Elevation focus of the probe, in millimeters.",
